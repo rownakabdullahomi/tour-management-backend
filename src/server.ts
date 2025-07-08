@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Server } from "http";
 import mongoose from "mongoose";
 import app from "./app";
@@ -10,8 +11,10 @@ let server: Server;
 
 const startServer = async () => {
   try {
-    const conn = await mongoose.connect(process.env.DATABASE_URI!);
-
+    if (!process.env.DATABASE_URI) {
+      throw new Error("DATABASE_URI environment variable is not defined.");
+    }
+    const conn = await mongoose.connect(process.env.DATABASE_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
     server = app.listen(5000, () => {
@@ -40,7 +43,7 @@ process.on("unhandledRejection", (error) => {
 
 process.on("uncaughtException", (error) => {
   console.log(
-    "Uncaught Exception  detected... Server is shutting down...",
+    "Uncaught Exception detected... Server is shutting down...",
     error
   );
   if (server) {
@@ -73,8 +76,8 @@ process.on("SIGINT", () => {
 
 
 
-// Unhandled Rejection Error
-// Promise.reject(new Error("I forgot to catch"));
+/// Unhandled Rejection Error
+//> Promise.reject(new Error("I forgot to catch"));
 
-// Uncaught Exception Error
-// throw new Error("I forgot to catch")
+/// Uncaught Exception Error
+//> throw new Error("I forgot to catch")
