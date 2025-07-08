@@ -2,23 +2,21 @@
 import { Server } from "http";
 import mongoose from "mongoose";
 import app from "./app";
-import dotenv from "dotenv";
+import { envVars } from './app/config/env';
 
 
-dotenv.config();
+
+
 
 let server: Server;
 
 const startServer = async () => {
   try {
-    if (!process.env.DATABASE_URI) {
-      throw new Error("DATABASE_URI environment variable is not defined.");
-    }
-    const conn = await mongoose.connect(process.env.DATABASE_URI);
+    const conn = await mongoose.connect(envVars.DATABASE_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
-    server = app.listen(5000, () => {
-      console.log(`⚡ Server is running on port: 5000.`);
+    server = app.listen(envVars.PORT, () => {
+      console.log(`⚡ Server is running on port: ${envVars.PORT}.`);
     });
   } catch (error) {
     console.log(`❌ Error: ${error}`);
