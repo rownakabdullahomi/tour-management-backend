@@ -1,16 +1,15 @@
 import { Server } from "http";
 import mongoose from "mongoose";
 import app from "./app";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 let server: Server;
 
-
-
 const startServer = async () => {
   try {
-    const conn = await mongoose.connect(
-      "mongodb+srv://mongodb:mongodb@cluster0.d3h8n.mongodb.net/tourDB?retryWrites=true&w=majority&appName=Cluster0"
-    );
+    const conn = await mongoose.connect(process.env.DATABASE_URI!);
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
@@ -18,10 +17,9 @@ const startServer = async () => {
       console.log(`⚡ Server is running on port: 5000.`);
     });
   } catch (error) {
-    console.log(error);
+    console.log(`❌ Error: ${error}`);
+    process.exit(1);
   }
 };
 
 startServer();
-
-
