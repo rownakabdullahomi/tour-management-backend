@@ -74,8 +74,8 @@ process.on("SIGINT", () => {
 
 
 
-/// Unhandled Rejection Error
+/// Unhandled Rejection Error 
 //> Promise.reject(new Error("I forgot to catch"));
 
-/// Uncaught Exception Error
+/// Uncaught Exception Error 
 //> throw new Error("I forgot to catch")

@@ -1,23 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
-import { User } from "./user.model";
 import httpStatus from "http-status-codes";
+import { UserServices } from "./user.service";
 
 const createUser = async (req: Request, res: Response) => {
   try {
-    const { name, email } = req.body;
-
-    const user = await User.create({
-      name,
-      email,
-    });
+    const user = await UserServices.createUser(req.body);
 
     res.status(httpStatus.CREATED).json({
       success: true,
       message: `User created successfully..`,
-      user
+      user,
     });
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.log(error);
     res.status(httpStatus.BAD_REQUEST).json({
       success: false,
@@ -26,6 +22,10 @@ const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const UserController = {
-    createUser
-}
+export const UserControllers = {
+  createUser,
+};
+
+
+/// Work Flow 
+//. Route matching -> Controller -> Service -> Model -> DB
