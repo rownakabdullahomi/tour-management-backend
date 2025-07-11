@@ -2,11 +2,8 @@
 import { Server } from "http";
 import mongoose from "mongoose";
 import app from "./app";
-import { envVars } from './app/config/env';
-
-
-
-
+import { envVars } from "./app/config/env";
+import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
 
 let server: Server;
 
@@ -24,7 +21,10 @@ const startServer = async () => {
   }
 };
 
-startServer();
+(async () => {
+  await startServer();
+  await seedSuperAdmin();
+})();
 
 process.on("unhandledRejection", (error) => {
   console.log(
@@ -72,10 +72,8 @@ process.on("SIGINT", () => {
   process.exit(1);
 });
 
-
-
-/// Unhandled Rejection Error 
+/// Unhandled Rejection Error
 //> Promise.reject(new Error("I forgot to catch"));
 
-/// Uncaught Exception Error 
+/// Uncaught Exception Error
 //> throw new Error("I forgot to catch")
