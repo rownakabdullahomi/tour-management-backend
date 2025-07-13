@@ -4,18 +4,21 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from 'http-status-codes';
 import { AuthServices } from "./auth.service";
+import AppError from "../../error/AppError";
 
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // const user = await UserServices.createUser(req.body);
-
-    // res.status(httpStatus.CREATED).json({
-    //   success: true,
-    //   message: `User created successfully..`,
-    //   user,
-    // });
 
     const loginInfo = await AuthServices.credentialsLogin(req.body);
+
+    res.cookie("accessToken", loginInfo.accessToken, {
+      httpOnly: true,
+      secure: false,
+    })
+    res.cookie("refreshToken", loginInfo.refreshToken, {
+      httpOnly: true,
+      secure: false,
+    })
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -26,7 +29,25 @@ const credentialsLogin = catchAsync(
   }
 );
 
+const getNewAccessToken = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const refreshToken = req.cookies.refreshToken;
+    if(!refreshToken){
+      throw new AppError(httpStatus.BAD_REQUEST, "No refresh token from cookies")
+    }
+    const tokenInfo = await AuthServices.getNewAccessToken(refreshToken);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User Logged In Successfully",
+      data: tokenInfo,
+    });
+  }
+);
+
 
 export const AuthControllers = {
-    credentialsLogin
+    credentialsLogin,
+    getNewAccessToken
 }
