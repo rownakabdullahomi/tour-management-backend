@@ -14,7 +14,19 @@ export const globalErrorHandler = (
   let statusCode = 500;
   let message = `Something went wrong!!`
 
-  if(error instanceof AppError){
+  /// Duplicate Error 
+  if(error.code === 11000){
+    const matchedArray = error.message.match(/"([^"]*)"/);
+    statusCode = 400;
+    message= `${matchedArray[1]} already exists`
+  }
+  /// Cast Error 
+  else if(error.name === "CastError"){
+    statusCode = 400;
+    message= "Please provide a valid ID."
+  }
+
+  else if(error instanceof AppError){
     statusCode = error.statusCode
     message = error.message
   }
