@@ -10,15 +10,15 @@ const createTour = async (payload: ITour) => {
         throw new Error("A tour with this title already exists.");
     }
 
-    const baseSlug = payload.title.toLowerCase().split(" ").join("-")
-    let slug = `${baseSlug}`
+    // const baseSlug = payload.title.toLowerCase().split(" ").join("-")
+    // let slug = `${baseSlug}`
 
-    let counter = 0;
-    while (await Tour.exists({ slug })) {
-        slug = `${slug}-${counter++}` // dhaka-division-2
-    }
+    // let counter = 0;
+    // while (await Tour.exists({ slug })) {
+    //     slug = `${slug}-${counter++}` // dhaka-division-2
+    // }
 
-    payload.slug = slug;
+    // payload.slug = slug;
 
     const tour = await Tour.create(payload)
 
@@ -131,17 +131,17 @@ const updateTour = async (id: string, payload: Partial<ITour>) => {
         throw new Error("Tour not found.");
     }
 
-    if (payload.title) {
-        const baseSlug = payload.title.toLowerCase().split(" ").join("-")
-        let slug = `${baseSlug}`
+    // if (payload.title) {
+    //     const baseSlug = payload.title.toLowerCase().split(" ").join("-")
+    //     let slug = `${baseSlug}`
 
-        let counter = 0;
-        while (await Tour.exists({ slug })) {
-            slug = `${slug}-${counter++}` // dhaka-division-2
-        }
+    //     let counter = 0;
+    //     while (await Tour.exists({ slug })) {
+    //         slug = `${slug}-${counter++}` // dhaka-division-2
+    //     }
 
-        payload.slug = slug
-    }
+    //     payload.slug = slug
+    // }
 
     const updatedTour = await Tour.findByIdAndUpdate(id, payload, { new: true });
 
@@ -152,8 +152,8 @@ const deleteTour = async (id: string) => {
     return await Tour.findByIdAndDelete(id);
 };
 
-const createTourType = async (payload: ITourType) => {
-    const existingTourType = await TourType.findOne({ name: payload.name });
+const createTourType = async (name: string) => {
+    const existingTourType = await TourType.findOne({ name });
 
     if (existingTourType) {
         throw new Error("Tour type already exists.");
