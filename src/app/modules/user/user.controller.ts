@@ -52,7 +52,8 @@ const updateUser = catchAsync(
 
 const getAllUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const users = await UserServices.getAllUsers();
+    const query = req.query;
+    const users = await UserServices.getAllUsers(query as Record<string, string>);
 
     // res.status(httpStatus.OK).json({
     //   success: true,
@@ -69,10 +70,23 @@ const getAllUsers = catchAsync(
   }
 );
 
+const getMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user as JwtPayload
+    const result = await UserServices.getMe(decodedToken.userId);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.CREATED,
+        message: "Your profile Retrieved Successfully",
+        data: result.data
+    })
+})
+
 export const UserControllers = {
   createUser,
   getAllUsers,
-  updateUser
+  updateUser,
+  getMe,
 };
 
 /// Work Flow

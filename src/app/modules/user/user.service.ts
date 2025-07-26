@@ -5,6 +5,8 @@ import bcryptjs from "bcryptjs";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 import AppError from "./../../error/AppError";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { userSearchableFields } from "./user.constant";
 
 /// Create a new user
 const createUser = async (payload: Partial<IUser>) => {
@@ -88,21 +90,38 @@ const updateUser = async (
 };
 
 /// Get all users
-const getAllUsers = async () => {
-  const users = await User.find({});
+const getAllUsers = async (query: Record<string, string>) => {
 
-  const totalUsers = await User.countDocuments(); //. for meta
+    const queryBuilder = new QueryBuilder(User.find(), query)
+    const usersData = queryBuilder
+        .filter()
+        .search(userSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
 
-  return {
-    data: users,
-    meta: {
-      total: totalUsers,
-    },
-  };
+    const [data, meta] = await Promise.all([
+        usersData.build(),
+        queryBuilder.getMeta()
+    ])
+
+    return {
+        data,
+        meta
+    }
+};
+
+/// Get me
+const getMe = async (userId: string) => {
+    const user = await User.findById(userId).select("-password");
+    return {
+        data: user
+    }
 };
 
 export const UserServices = {
   createUser,
   getAllUsers,
   updateUser,
+  getMe,
 };

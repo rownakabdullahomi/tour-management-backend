@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import passport from "passport";
 import {
@@ -7,9 +8,10 @@ import {
 } from "passport-google-oauth20";
 import { envVars } from "./env";
 import { User } from "../modules/user/user.model";
-import { Role } from "../modules/user/user.interface";
+import { IsActive, Role } from "../modules/user/user.interface";
 import { Strategy as LocalStrategy } from "passport-local";
-import bcryptjs from 'bcryptjs';
+import bcryptjs from "bcryptjs";
+
 
 passport.use(
   new LocalStrategy(
@@ -24,17 +26,39 @@ passport.use(
         // if (!isUserExist) {
         //   return done(null, false, { message: "User does not exist" });
         // }
+
         if (!isUserExist) {
-          return done("User does not exist" );
+          return done("User does not exist");
         }
 
-        const isGoogleAuthenticated = isUserExist.auths.some(providerObjects => providerObjects.provider === "google")
+        if (!isUserExist.isVerified) {
+          // throw new AppError(httpStatus.BAD_REQUEST, "User is not verified")
+          return done("User is not verified");
+        }
+
+        if (
+          isUserExist.isActive === IsActive.BLOCKED ||
+          isUserExist.isActive === IsActive.INACTIVE
+        ) {
+          // throw new AppError(httpStatus.BAD_REQUEST, `User is ${isUserExist.isActive}`)
+          return done(`User is ${isUserExist.isActive}`);
+        }
+        if (isUserExist.isDeleted) {
+          // throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
+          return done("User is deleted");
+        }
+
+        const isGoogleAuthenticated = isUserExist.auths.some(
+          (providerObjects) => providerObjects.provider === "google"
+        );
 
         // if(isGoogleAuthenticated){
         //     return done(null, false, {message: "You have authenticated by Google login. If you want to login with credentials, then at first login with google and set a password"})
         // }
-        if(isGoogleAuthenticated && !isUserExist.password){
-            return done("You have authenticated by Google login. If you want to login with credentials, then at first login with google and set a password")
+        if (isGoogleAuthenticated && !isUserExist.password) {
+          return done(
+            "You have authenticated by Google login. If you want to login with credentials, then at first login with google and set a password"
+          );
         }
 
         const isPasswordMatched = await bcryptjs.compare(
@@ -46,8 +70,7 @@ passport.use(
           return done(null, false, { message: "Password does not match.." });
         }
 
-        return done(null, isUserExist)
-
+        return done(null, isUserExist);
       } catch (error) {
         console.log(error);
         done(error);
@@ -57,49 +80,63 @@ passport.use(
 );
 
 passport.use(
-  new GoogleStrategy(
-    {
-      clientID: envVars.GOOGLE_CLIENT_ID,
-      clientSecret: envVars.GOOGLE_CLIENT_SECRET,
-      callbackURL: envVars.GOOGLE_CALLBACK_URL,
-    },
-    async (
-      accessToken: string,
-      refreshToken: string,
-      profile: Profile,
-      done: VerifyCallback
-    ) => {
-      try {
-        const email = profile.emails?.[0].value;
-        if (!email) {
-          return done(null, false, { message: "No Email found" });
-        }
+    new GoogleStrategy(
+        {
+            clientID: envVars.GOOGLE_CLIENT_ID,
+            clientSecret: envVars.GOOGLE_CLIENT_SECRET,
+            callbackURL: envVars.GOOGLE_CALLBACK_URL
+        }, async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
 
-        let user = await User.findOne({ email });
-        if (!user) {
-          user = await User.create({
-            email,
-            name: profile.displayName,
-            picture: profile.photos?.[0].value,
-            role: Role.USER,
-            isVerified: true,
-            auths: [
-              {
-                provider: "google",
-                providerId: profile.id,
-              },
-            ],
-          });
-        }
+            try {
+                const email = profile.emails?.[0].value;
 
-        return done(null, user);
-      } catch (error) {
-        console.log("Google Strategy Error", error);
-        return done(error);
-      }
-    }
-  )
-);
+                if (!email) {
+                    return done(null, false, { mesaage: "No email found" })
+                }
+
+                let isUserExist = await User.findOne({ email })
+                if (isUserExist && !isUserExist.isVerified) {
+                    // throw new AppError(httpStatus.BAD_REQUEST, "User is not verified")
+                    // return done("User is not verified")
+                    return done(null, false, { message: "User is not verified" })
+                }
+
+                if (isUserExist && (isUserExist.isActive === IsActive.BLOCKED || isUserExist.isActive === IsActive.INACTIVE)) {
+                    // throw new AppError(httpStatus.BAD_REQUEST, `User is ${isUserExist.isActive}`)
+                    return done(`User is ${isUserExist.isActive}`)
+                }
+
+                if (isUserExist && isUserExist.isDeleted) {
+                    return done(null, false, { message: "User is deleted" })
+                    // return done("User is deleted")
+                }
+
+                if (!isUserExist) {
+                    isUserExist = await User.create({
+                        email,
+                        name: profile.displayName,
+                        picture: profile.photos?.[0].value,
+                        role: Role.USER,
+                        isVerified: true,
+                        auths: [
+                            {
+                                provider: "google",
+                                providerId: profile.id
+                            }
+                        ]
+                    })
+                }
+
+                return done(null, isUserExist)
+
+
+            } catch (error) {
+                console.log("Google Strategy Error", error);
+                return done(error)
+            }
+        }
+    )
+)
 
 passport.serializeUser((user: any, done: (err: any, id?: unknown) => void) => {
   done(null, user._id);

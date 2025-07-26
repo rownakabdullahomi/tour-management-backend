@@ -18,7 +18,7 @@ const credentialsLogin = catchAsync(
 
       if(error){
         // return next(error)
-        return next(new AppError(401, error))
+        return next(new AppError(error.statusCode || 401, error.message))
         
       }
 
