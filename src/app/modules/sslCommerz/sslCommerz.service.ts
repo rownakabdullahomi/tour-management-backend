@@ -6,7 +6,7 @@ import { ISSLCommerz } from "./sslCommerz.interface"
 import AppError from "../../error/AppError"
 
 const sslPaymentInit = async (payload: ISSLCommerz) => {
-
+console.log(payload);
     try {
         const data = {
             store_id: envVars.SSL.STORE_ID,

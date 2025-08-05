@@ -33,6 +33,7 @@ const initPayment = async (bookingId: string) => {
     }
 
     const sslPayment = await SSLService.sslPaymentInit(sslPayload)
+    console.log("sslPayment", sslPayment);
 
     return {
         paymentUrl: sslPayment.GatewayPageURL
